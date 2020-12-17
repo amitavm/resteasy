@@ -38,15 +38,12 @@ Admins should be able to:
 The data layer consists of the database (SQLite 3), and a Python wrapper that
 provides an API around the data.  The idea of having a separate data layer,
 instead of making it part of the web service layer, is to make it easy to
-switch the data storage technology.  In this implementation we have used
-SQLite 3, but we may want to try some NoSQL technologies, e.g., to see if that
-works better.
-
-Ideally, we would like to implement this (data) layer also as a web API.  That
-would make the design maximally flexible: we could use any programming language
-to implement the layer.
+switch the data storage technology.
 
 #### Database Tables
+
+The data in the data-layer is stored in tables in an SQLite 3 database.
+We have the following tables in our database:
 
 * Table `users`
 ```
