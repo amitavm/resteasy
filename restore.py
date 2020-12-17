@@ -20,7 +20,7 @@ class REStore:
         self.__tbl_items = _TableItems(self.__conn)
         self.__tbl_dishes = _TableDishes(self.__conn)
         self.__tbl_orders = _TableOrders(self.__conn)
-        self.__tbl_orderlist = _TableOrderList(self.__conn)
+        self.__tbl_orderdishes = _TableOrderDishes(self.__conn)
 
 
     def __init_db(self, dbfile):
@@ -42,6 +42,11 @@ class REStore:
 
 
     # --- API around the `users` table. ---
+    def get_uid(self, uname):
+        '''Get the (unique) ID of user with username "uname".'''
+        return self.__tbl_users.get_uid(uname)
+
+
     def add_user(self, uname, pword, fname, phone):
         '''Add a new user with specified user data.'''
         self.__tbl_users.add_user(uname, pword, fname, phone)
@@ -105,6 +110,11 @@ class REStore:
         return self.__tbl_items.add_item(name, cals)
 
 
+    def get_iid(self, name):
+        '''Return the (unique) ID of item "name".'''
+        return self.__tbl_items.get_iid(name)
+
+
     def item_exists(self, name):
         '''Return True if item "name" already exists; False otherwise.'''
         return self.__tbl_items.item_exists(name)
@@ -119,6 +129,11 @@ class REStore:
     def add_dish(self, iid, vid, price):
         '''Add a dish to the "dishes" table.'''
         self.__tbl_dishes.add_dish(iid, vid, price)
+
+
+    def get_did(self, iid, vid):
+        '''Return the (unique) ID of the dish, given its "iid" and "vid".'''
+        return self.__tbl_dishes.get_did(iid, vid)
 
 
     def dish_exists(self, iid, vid):
@@ -139,6 +154,25 @@ class REStore:
     def list_dishes_by_vendor(self, vid):
         '''List dishes offered by the vendor with ID "vid".'''
         return self.__tbl_dishes.list_dishes_by_vendor(vid)
+
+
+    # --- API around the `orders` and `orderdishes` tables. ---
+    def add_order(self, uid, ts):
+        '''Create an entry in the "orders" table while placing an order.
+        Return the corresponding (unique) order ID.'''
+        return self.__tbl_orders.add_order(uid, ts)
+
+
+    def del_order(self, oid):
+        '''Delete the order with the ID "oid".'''
+        self.__tbl_orderdishes.del_order_dishes(oid)
+        self.__tbl_orders.del_order(oid)
+
+
+    def add_order_dish(self, oid, did, qty):
+        '''Place order for "qty" quantities of dish "did", which is part of the
+        order "oid".'''
+        return self.__tbl_orderdishes.add_order_dish(oid, did, qty)
 
 
     # Close the DB connection.
@@ -165,6 +199,13 @@ class _TableUsers:
         self.__conn.commit()
 
 
+    def get_uid(self, uname):
+        cursor = self.__conn.execute(
+            'SELECT uid FROM users WHERE username = ?;', (uname,))
+        row = cursor.fetchone()
+        return row[0] if row else None
+
+
     def add_user(self, uname, pword, fname, phone):
         if self.user_exists(uname):
             raise RuntimeError('user "%s" already exists' % uname)
@@ -175,9 +216,8 @@ class _TableUsers:
 
 
     def user_exists(self, uname):
-        cursor = self.__conn.execute(
-            'SELECT username FROM users WHERE username = ?;', (uname,))
-        return len(cursor.fetchall()) != 0
+        uid = self.get_uid(uname)
+        return uid is not None
 
 
     def del_user(self, uname):
@@ -340,6 +380,12 @@ class _TableDishes:
         self.__conn.commit()
 
 
+    def get_did(self, iid, vid):
+        cursor = self.__conn.execute(
+            'SELECT did FROM dishes WHERE iid = ? AND vid = ?;', (iid, vid))
+        row = cursor.fetchone()
+        return row[0] if row else None
+
     def add_dish(self, iid, vid, price):
         if self.dish_exists(iid, vid):
             raise RuntimeError('dish "%d,%d" already exists' % (iid, vid))
@@ -350,9 +396,8 @@ class _TableDishes:
 
 
     def dish_exists(self, iid, vid):
-        cursor = self.__conn.execute(
-            'SELECT did FROM dishes WHERE iid = ? AND vid = ?;', (iid, vid))
-        return len(cursor.fetchall()) != 0
+        did = self.get_did(iid, vid)
+        return did is not None
 
 
     def del_dish(self, iid, vid):
@@ -390,21 +435,38 @@ class _TableOrders:
         self.__conn.execute('''\
             CREATE TABLE IF NOT EXISTS orders (
                 oid INTEGER PRIMARY KEY,
-                timestamp INTEGER NOT NULL,
                 uid INTEGER NOT NULL,
+                timestamp INTEGER NOT NULL,
                 FOREIGN KEY(uid) REFERENCES users(uid)
             );''')
         self.__conn.commit()
 
 
-    def add_order(self, ts, uid):
-        self.__conn.execute('''\
-            INSERT INTO orders (timestamp, uid) VALUES (?, ?);''', (ts, uid))
+    def get_oid(self, uid, ts):
+        cursor = self.__conn.execute(
+            'SELECT oid FROM orders WHERE uid = ? AND timestamp = ?;',
+            (uid, ts))
+        row = cursor.fetchone()
+        return row[0] if row else None
+        # NOTE: This is our tentative way of uniquely identifying a specific
+        # order.  It's OK for prototyping, but we should use something more
+        # reliable in production, like UUIDs, e.g.
+
+
+    def add_order(self, uid, ts):
+        self.__conn.execute(
+            'INSERT INTO orders (uid, timestamp) VALUES (?, ?);', (uid, ts))
+        self.__conn.commit()
+        return self.get_oid(uid, ts)
+
+
+    def del_order(self, oid):
+        self.__conn.execute('DELETE FROM orders WHERE oid = ?;', (oid,))
         self.__conn.commit()
 
 
-class _TableOrderList:
-    '''Abstraction of the "orderlist" table.'''
+class _TableOrderDishes:
+    '''Abstraction of the "orderdishes" table.'''
     def __init__(self, conn):
         self.__conn = conn
         self.__create_table()
@@ -412,7 +474,7 @@ class _TableOrderList:
 
     def __create_table(self):
         self.__conn.execute('''\
-            CREATE TABLE IF NOT EXISTS orderlist (
+            CREATE TABLE IF NOT EXISTS orderdishes (
                 oid INTEGER NOT NULL,
                 did INTEGER NOT NULL,
                 quantity INTEGER NOT NULL,
@@ -423,10 +485,15 @@ class _TableOrderList:
         self.__conn.commit()
 
 
-    def add_order(self, oid, did, qty):
+    def add_order_dish(self, oid, did, qty):
         self.__conn.execute('''\
-            INSERT INTO orderlist (oid, did, quantity)
+            INSERT INTO orderdishes (oid, did, quantity)
             VALUES (?, ?, ?);''', (oid, did, qty))
+        self.__conn.commit()
+
+
+    def del_order_dishes(self, oid):
+        self.__conn.execute('DELETE FROM orderdishes WHERE oid = ?;', (oid,))
         self.__conn.commit()
 
 
