@@ -1,4 +1,4 @@
-# RestEasy--An Online Food Ordering App
+# RestEasy: An Online Food Ordering App
 
 ## Introduction
 
