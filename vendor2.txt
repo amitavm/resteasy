@@ -1,0 +1,30 @@
+Adyar Anand Bhavan;B G Road, Bangalore;shanmugam;mypassword
+idli;30.00
+rava idli;40.00
+dosa;60.00
+masala dosa;80.00
+onion uttapam;70.00
+veg fried rice;150.00
+paneer fried rice;180.00
+mushroom fried rice;180.00
+special fried rice;200.00
+veg noodles;130.00
+paneer noodles;150.00
+mushroom noodles;150.00
+babycorn masala;200.00
+paneer tikka masala;200.00
+paneer bhurji;180.00
+paneer lababdar;220.00
+roti;30.00
+naan;40.00
+butter naan;50.00
+kulcha;50.00
+butter kulcha;60.00
+gulab jamoon;80.00
+carrot halwa;80.00
+moong daal halwa;75.00
+chocolate ice-cream;70.00
+butterscotch ice-cream;70.00
+strawberry ice-cream;80.00
+mango ice-cream;70.00
+A2B special sundae;150.00

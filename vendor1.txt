@@ -1,0 +1,26 @@
+Adigas;B G Road, Bangalore;balaji;itssecret
+idli;20.00
+rava idli;25.00
+dosa;40.00
+onion uttapam;50.00
+veg fried rice;120.00
+paneer fried rice;150.00
+mushroom fried rice;150.00
+veg noodles;100.00
+paneer noodles;130.00
+mushroom noodles;130.00
+corn capsicum masala;200.00
+paneer tikka masala;200.00
+paneer bhurji;180.00
+shahi paneer;220.00
+roti;20.00
+naan;30.00
+butter naan;40.00
+kulcha;45.00
+butter kulcha;50.00
+gulab jamoon;60.00
+carrot halwa;70.00
+chocolate ice-cream;50.00
+butterscotch ice-cream;50.00
+strawberry ice-cream;50.00
+special sundae;100.00

@@ -1,0 +1,7 @@
+# Ignore Vim swap files.
+.*.sw?
+
+resteasy.db
+
+*.pyc
+__pycache__/
