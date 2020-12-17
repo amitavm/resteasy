@@ -1,4 +1,4 @@
-# RestEasy: An Online Food Ordering App
+# Rest Easy: An Online Food Ordering App
 
 ## Introduction
 
@@ -59,7 +59,7 @@ We have the following tables in our database:
     - aid INTEGER PRIMARY KEY           [Unique row/entry identifier]
     - username TEXT NOT NULL UNIQUE     [Unique login user-name of this person]
     - password TEXT NOT NULL            [This user's login password (encrypted)]
-    - vendors TEXT NOT NULL             [List (CSV) of vendors managed by this admin]
+    - vid INTEGER NOT NULL              [Foreign key: ID from the table `vendors`]
 ```
 
 * Table `vendors`
@@ -73,7 +73,7 @@ We have the following tables in our database:
 ```
     - iid INTEGER PRIMARY KEY           [Unique item identifier]
     - name TEXT NOT NULL UNIQUE         [Name of the dish]
-    - calories INTEGER                  [Amount of calories in this item]
+    - calories INTEGER DEFAULT 0        [Amount of calories in this item]
 ```
 
 * Table `dishes`
@@ -87,11 +87,11 @@ We have the following tables in our database:
 * Table `orders`
 ```
     - oid INTEGER PRIMARY KEY           [Unique order identifier]
-    - timestamp INTEGER NOT NULL        [Epoch-time when order was placed]
     - uid INTEGER NOT NULL              [Foreign key: ID from the table `users`]
+    - timestamp INTEGER NOT NULL        [Epoch-time when order was placed]
 ```
 
-* Table `orderlist`
+* Table `orderdishes`
 ```
     - oid INTEGER NOT NULL              [Foreign key: ID from the table `orders`]
     - did INTEGER NOT NULL              [Foreign key: ID from the table `dishes`]
