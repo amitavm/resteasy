@@ -316,9 +316,10 @@ class _TableVendors:
         self.__conn.commit()
 
 
-    def list_vendors(self, substr):
+    def list_vendors(self, name):
         cursor = self.__conn.execute(
-            'SELECT vid, name FROM vendors WHERE name LIKE %?%;', (substr,))
+            'SELECT vid, name FROM vendors WHERE name LIKE ?;',
+            ('%' + name + '%',))
         return [row for row in cursor]
 
 
@@ -421,7 +422,7 @@ class _TableDishes:
             SELECT items.name, vendors.name, price FROM dishes
             INNER JOIN items ON items.iid = dishes.iid
             INNER JOIN vendors ON vendors.vid = dishes.vid
-            WHERE items.name LIKE %?%;''', (name,))
+            WHERE items.name LIKE ?;''', ('%' + name + '%',))
         return [row for row in cursor]
 
 
