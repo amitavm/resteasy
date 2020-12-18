@@ -175,6 +175,16 @@ class REStore:
         return self.__tbl_orderdishes.add_order_dish(oid, did, qty)
 
 
+    def list_order_by_uid(self, uid):
+        '''List the dishes ordered by user "uid".'''
+        return self.__tbl_orderdishes.list_order_by_uid(uid)
+
+
+    def list_order_by_vid(self, vid):
+        '''List the dishes ordered against vendor "vid".'''
+        return self.__tbl_orderdishes.list_order_by_vid(vid)
+
+
     # Close the DB connection.
     def close(self):
         self.__conn.close()
@@ -502,3 +512,31 @@ class _TableOrderDishes:
             UPDATE orderlist SET cancelled = ?
             WHERE oid = ? AND did = ?;''', (ts, oid, did))
         self.__conn.commit()
+
+
+    def list_order_by_uid(self, uid):
+        cursor = self.__conn.execute('''\
+            SELECT
+                orders.timestamp, items.name, vendors.name,
+                dishes.price, orderdishes.quantity
+            FROM orderdishes
+            INNER JOIN dishes ON dishes.did = orderdishes.did
+            INNER JOIN orders ON orders.oid = orderdishes.oid
+            INNER JOIN items ON items.iid = dishes.iid
+            INNER JOIN vendors ON vendors.vid = dishes.vid
+            WHERE orders.uid = ?;''', (uid,))
+        return [row for row in cursor]
+
+
+    def list_order_by_vid(self, vid):
+        cursor = self.__conn.execute('''\
+            SELECT
+                orders.timestamp, users.username,
+                items.name, orderdishes.quantity
+            FROM orderdishes
+            INNER JOIN dishes ON dishes.did = orderdishes.did
+            INNER JOIN orders ON orders.oid = orderdishes.oid
+            INNER JOIN items ON items.iid = dishes.iid
+            INNER JOIN users ON users.uid = orders.uid
+            WHERE dishes.vid = ?;''', (vid,))
+        return [row for row in cursor]
