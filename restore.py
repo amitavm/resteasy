@@ -218,7 +218,7 @@ class _TableUsers:
 
     def add_user(self, uname, pword, fname, phone):
         if self.user_exists(uname):
-            raise RuntimeError('user "%s" already exists' % uname)
+            raise RuntimeError("user '%s' already exists" % uname)
         self.__conn.execute('''\
             INSERT INTO users (username, password, fullname, phonenum)
             VALUES (?, ?, ?, ?);''', (uname, pword, fname, phone))
@@ -256,7 +256,7 @@ class _TableAdmins:
 
     def add_admin(self, uname, pword, vid):
         if self.admin_exists(uname):
-            raise RuntimeError('admin "%s" already exists' % uname)
+            raise RuntimeError("admin '%s' already exists" % uname)
         self.__conn.execute('''\
             INSERT INTO admins (username, password, vid)
             VALUES (?, ?, ?);''', (uname, pword, vid))
@@ -300,7 +300,7 @@ class _TableVendors:
 
     def add_vendor(self, name, addr):
         if self.get_vid(name) is not None:
-            raise RuntimeError('vendor "%s" already exists' % name)
+            raise RuntimeError("vendor '%s' already exists" % name)
         self.__conn.execute(
             'INSERT INTO vendors (name, address) VALUES (?, ?);', (name, addr))
         self.__conn.commit()
