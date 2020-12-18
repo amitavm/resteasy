@@ -96,11 +96,11 @@ class REStore:
 
     def del_vendor(self, name):
         '''Delete vendor "name" from the "vendors" table.'''
-        self.__tbl_vendor.del_vendor(name)
+        self.__tbl_vendors.del_vendor(name)
 
     def list_vendors(self, substr):
         '''Return a list of all vendors with "substr" in their names.'''
-        return self.__tbl_vendor.list_vendors(substr)
+        return self.__tbl_vendors.list_vendors(substr)
 
 
     # --- API around the `items` table. ---
