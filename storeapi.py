@@ -11,20 +11,25 @@ store = REStore('config.ini')
 def get_qparams_or_abort(*qpnames):
     '''Return the values of the named query parameters as a tuple, if present.
     Abort otherwise.'''
+    for arg in request.args:
+        if arg not in qpnames:
+            abort(400, "unexpected parameter '%s'" % arg)
+
     qpvals = []
     for qpname in qpnames:
         qpval = request.args.get(qpname)
         if qpval is None:
             abort(400, "missing parameter '%s'" % qpname)
         qpvals.append(qpval)
+
     return qpvals
 
 
-def check_result(val, badval, msg):
+def check_result(val, badval, msg, stcode=400):
     '''Return the value "val" (jsonified), if it does not equal "badval".
     Abort otherwise.'''
     if val == badval:
-        abort(400, msg)
+        abort(stcode, msg)
     return jsonify(val)
 
 
@@ -35,6 +40,12 @@ def check_exception(func, *params):
         abort(400, e)
     else:
         return jsonify('OK')
+
+
+# --- General endpoints. ---
+@app.route('/ping')
+def ping():
+    return jsonify('OK')
 
 
 # --- API around users. ---
@@ -55,6 +66,39 @@ def add_user():
 def del_user():
     params = get_qparams_or_abort('username')
     return check_exception(store.del_user, *params)
+
+
+@app.route('/login-user')
+def login_user():
+    params = get_qparams_or_abort('username', 'password')
+    return check_result(store.check_user_credentials(*params), None,
+                        "incorrect username and/or password", 401)
+
+
+@app.route('/user-data')
+def get_user_data():
+    params = get_qparams_or_abort('uid')
+    return check_result(store.user_data(*params), None, 'invalid user ID', 400)
+
+
+# --- API around admins. ---
+@app.route('/add-admin')
+def add_admin():
+    params = get_qparams_or_abort('username', 'password', 'vid')
+    return check_exception(store.add_admin, *params)
+
+
+@app.route('/del-admin')
+def del_admin():
+    params = get_qparams_or_abort('username')
+    return check_exception(store.del_admin, *params)
+
+
+@app.route('/login-admin')
+def login_admin():
+    params = get_qparams_or_abort('username', 'password')
+    return check_result(store.check_admin_credentials(*params), None,
+                        "incorrect username and/or password", 401)
 
 
 # --- API around vendors. ---
