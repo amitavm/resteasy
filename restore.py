@@ -62,6 +62,17 @@ class REStore:
         self.__tbl_users.del_user(uname)
 
 
+    def check_user_credentials(self, uname, pword):
+        '''Verify if uname,pword is a correct pair of credentials in "users"
+        table.  If yes, return the corresponding "uid".'''
+        return self.__tbl_users.check_credentials(uname, pword)
+
+
+    def user_data(self, uid):
+        '''Return (username, fullname, phone) for the user "uid".'''
+        return self.__tbl_users.user_data(uid)
+
+
     # --- API around the `admins` table. ---
     def add_admin(self, uname, pword, vid):
         '''Add a new admin with specified user data.'''
@@ -76,6 +87,12 @@ class REStore:
     def del_admin(self, uname):
         '''Delete the admin with username "uname" from the "admins" table.'''
         self.__tbl_users.del_admin(uname)
+
+
+    def check_admin_credentials(self, uname, pword):
+        '''Verify if uname,pword is a correct pair of credentials in "admins"
+        table.  If yes, return the corresponding "aid".'''
+        return self.__tbl_admins.check_credentials(uname, pword)
 
 
     # --- API around the `vendors` table. ---
@@ -235,6 +252,21 @@ class _TableUsers:
         self.__conn.commit()
 
 
+    def check_credentials(self, uname, pword):
+        cursor = self.__conn.execute(
+            'SELECT uid FROM users WHERE username = ? AND password = ?;',
+            (uname, pword))
+        row = cursor.fetchone()
+        return row[0] if row else None
+
+
+    def user_data(self, uid):
+        cursor = self.__conn.execute('''\
+            SELECT username, fullname, phonenum FROM users
+            WHERE uid = ?;''', (uid,))
+        return cursor.fetchone()
+
+
 class _TableAdmins:
     '''Abstraction of the "admins" table.'''
     def __init__(self, conn):
@@ -272,6 +304,14 @@ class _TableAdmins:
     def del_admin(self, uname):
         self.__conn.execute('DELETE FROM admins WHERE username = ?;', (uname,))
         self.__conn.commit()
+
+
+    def check_credentials(self, uname, pword):
+        cursor = self.__conn.execute(
+            'SELECT aid FROM admins WHERE username = ? AND password = ?;',
+            (uname, pword))
+        row = cursor.fetchone()
+        return row[0] if row else None
 
 
 class _TableVendors:
