@@ -101,6 +101,7 @@ class REStore:
         Otherwise return None.'''
         return self.__tbl_vendors.get_vid(name)
 
+
     def add_vendor(self, name, addr):
         '''Add a new vendor with specified data.  Return the vendor ID.'''
         return self.__tbl_vendors.add_vendor(name, addr)
@@ -115,9 +116,15 @@ class REStore:
         '''Delete vendor "name" from the "vendors" table.'''
         self.__tbl_vendors.del_vendor(name)
 
-    def list_vendors(self, substr):
-        '''Return a list of all vendors with "substr" in their names.'''
-        return self.__tbl_vendors.list_vendors(substr)
+
+    def list_vendors(self):
+        '''Return a list of all available vendors.'''
+        return self.__tbl_vendors.list_vendors()
+
+
+    def list_vendors_by_name(self, name):
+        '''Return a list of all vendors with "name" in their names.'''
+        return self.__tbl_vendors.list_vendors_by_name(name)
 
 
     # --- API around the `items` table. ---
@@ -356,10 +363,14 @@ class _TableVendors:
         self.__conn.commit()
 
 
-    def list_vendors(self, name):
+    def list_vendors(self):
+        cursor = self.__conn.execute('SELECT * FROM vendors;')
+        return [row for row in cursor]
+
+
+    def list_vendors_by_name(self, name):
         cursor = self.__conn.execute(
-            'SELECT vid, name FROM vendors WHERE name LIKE ?;',
-            ('%' + name + '%',))
+            'SELECT * FROM vendors WHERE name LIKE ?;', ('%' + name + '%',))
         return [row for row in cursor]
 
 
