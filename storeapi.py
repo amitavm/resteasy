@@ -56,6 +56,12 @@ def get_uid():
                         "could not find user '%s'" % username)
 
 
+@app.route('/user-exists')
+def user_exists():
+    uname, = get_qparams_or_abort('username')
+    return jsonify(store.user_exists(uname))
+
+
 @app.route('/add-user')
 def add_user():
     params = get_qparams_or_abort('username', 'password', 'fullname', 'phone')
@@ -104,6 +110,23 @@ def login_admin():
 # --- API around vendors. ---
 @app.route('/list-vendors')
 def list_vendors():
-    name = get_qparam_or_abort('name')
-    return check_result(store.list_vendors(name), [],
-                        "'%s' did not match any vendors" % name)
+    return jsonify(store.list_vendors())
+
+
+@app.route('/list-vendors-by-name')
+def list_vendors_by_name():
+    name, = get_qparams_or_abort('name')
+    return jsonify(store.list_vendors_by_name(name))
+
+
+# --- API around dishes. ---
+@app.route('/list-dishes-by-vendor')
+def list_dishes_by_vendor():
+    vid, = get_qparams_or_abort('vid')
+    return jsonify(store.list_dishes_by_vendor(vid))
+
+
+@app.route('/list-dishes-by-name')
+def list_dishes_by_name():
+    name, = get_qparams_or_abort('name')
+    return jsonify(store.list_dishes_by_name(name))
