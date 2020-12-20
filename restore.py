@@ -470,7 +470,7 @@ class _TableDishes:
 
     def list_dishes_by_name(self, name):
         cursor = self.__conn.execute('''\
-            SELECT items.name, vendors.name, price FROM dishes
+            SELECT did, items.name, vendors.name, price FROM dishes
             INNER JOIN items ON items.iid = dishes.iid
             INNER JOIN vendors ON vendors.vid = dishes.vid
             WHERE items.name LIKE ?;''', ('%' + name + '%',))
@@ -479,7 +479,7 @@ class _TableDishes:
 
     def list_dishes_by_vendor(self, vid):
         cursor = self.__conn.execute('''\
-            SELECT items.name, vendors.name, price FROM dishes
+            SELECT did, items.name, vendors.name, price FROM dishes
             INNER JOIN items ON items.iid = dishes.iid
             INNER JOIN vendors ON vendors.vid = dishes.vid
             WHERE dishes.vid = ?;''', (vid,))
