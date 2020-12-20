@@ -25,7 +25,7 @@ class REStore:
 
     def __init_db(self, dbfile):
         try:
-            conn = sqlite3.connect(dbfile)
+            conn = sqlite3.connect(dbfile, check_same_thread=False)
             # NOTE: SQLite3 requires us to explicitly enable foreign-key
             # support at runtime.
             conn.execute('PRAGMA foreign_keys = ON;')
