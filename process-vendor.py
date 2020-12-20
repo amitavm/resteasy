@@ -29,7 +29,7 @@ def add_metadata(store, mdline):
     # NAME;ADDRESS;ADMIN-USERNAME;ADMIN-PASSWORD
     separator = ';'
     name, addr, uname, pword = mdline.split(separator)
-    vid = store.add_vendor(name, addr)
+    vid = store.add_vendor(name.title(), addr.title())
     store.add_admin(uname, pword, vid)
     return vid
 
@@ -40,7 +40,7 @@ def add_dishes(store, vid, dishes):
     separator = ';'
     for dish in dishes:
         item, price = dish.split(separator)
-        iid = store.add_item(item)
+        iid = store.add_item(item.title())
         store.add_dish(iid, vid, price)
 
 
