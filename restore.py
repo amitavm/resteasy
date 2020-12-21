@@ -196,7 +196,7 @@ class REStore:
     def add_order_dish(self, oid, did, qty):
         '''Place order for "qty" quantities of dish "did", which is part of the
         order "oid".'''
-        return self.__tbl_orderdishes.add_order_dish(oid, did, qty)
+        self.__tbl_orderdishes.add_order_dish(oid, did, qty)
 
 
     def list_order_by_uid(self, uid):
