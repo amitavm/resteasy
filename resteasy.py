@@ -3,11 +3,14 @@
 # This is the client-side (UI) of RestEasy, to be used by users.
 # We are building this prototype as a CLI rather than a real browser based UI.
 
+from collections import defaultdict
+from datetime import datetime
 from getpass import getpass
 import json
 import os
 import requests
 import sys
+import time
 
 
 # --- Global variables. ---
@@ -23,6 +26,9 @@ cart = []
 
 # Max quantities of a dish we allow to be ordered.
 max_qty = 9
+
+# Symbolic constant for HTTP OK status code.
+HTTP_OK = 200
 
 
 # --- Wrapper functions around API calls. ---
@@ -110,36 +116,77 @@ def list_dishes_by_vendor(vendor_data):
         print('\nEnter the repeat-count (max %d) for "%s".'
               % (max_qty, dishes[n-1][1]))
         print('Or just press <Enter> to order one portion of it.')
-        qty = read_choice(max_qty, 'Number of portions to order: ')
-        if not qty:
-            qty = 1
-        cart.append((dishes[n-1], qty))
+        qty = read_choice(max_qty, 'Number of portions to order: ', default=1)
+        cart.append(dishes[n-1] + [qty])
+
+
+def show_dishes(dishes):
+    print('-' * 73)
+    print('%5s  %-25s%-20s%8s%5s%8s'
+          % ('#', 'Item', 'Vendor', 'Price', 'Qty', 'Totals'))
+    print('-' * 73)
+    total = 0
+    for i, (_, item, vendor, price, qty) in enumerate(dishes, 1):
+        item_price = price * qty
+        print('%5d. %-25s%-20s%8.2f%5d%8.2f'
+              % (i, item, vendor, price, qty, item_price))
+        total += item_price
+    print('-' * 73)
+    print('%65s%8.2f' % ('Net price: ', total))
+    print('-' * 73)
 
 
 def view_cart():
     print_header()
     if len(cart) == 0:
         print('\nNo entries found in cart.')
+        input('Press <Enter> to return to main menu: ')
     else:
         print('\nCart entries:')
-        print('-' * 73)
-        print('%5s  %-25s%-20s%8s%5s%8s'
-              % ('#', 'Item', 'Vendor', 'Price', 'Qty', 'Totals'))
-        print('-' * 73)
-        total = 0
-        for i, ((_, item, vendor, price), qty) in enumerate(cart, 1):
-            item_price = price * qty
-            print('%5d. %-25s%-20s%8.2f%5d%8.2f'
-                  % (i, item, vendor, price, qty, item_price))
-            total += item_price
-        print('-' * 73)
-        print('%65s%8.2f' % ('Net price: ', total))
-        print('-' * 73)
+        show_dishes(cart)
+        print('\nEnter "y|yes" to place the order.')
+        print('Or just press <Enter> to return to main menu.')
+        resp = input('Place order?  Enter "y|yes" to confirm: ')
+        if resp and (resp.lower() == 'y' or resp.lower() == 'yes'):
+            place_order()
+
+
+def view_orders():
+    print_header()
+    resp = call_api('list-order-by-uid', params={'uid': userdata['uid']})
+    if resp.status_code != HTTP_OK:
+        print('\nFailed to fetch your orders.')
+    else:
+        ordlist = json.loads(resp.text)
+        if len(ordlist) == 0:
+            print('\nCould not find any orders placed by you.')
+        else:
+            print('\nOrders placed by you:')
+            orders = defaultdict(list)
+            # Segregate the orders by (order-id, timestamp) pairs.
+            for oid, ts, did, item, vendor, price, qty in ordlist:
+                orders[(oid, ts)].append((did, item, vendor, price, qty))
+            for i, ((oid, ts), dishes) in enumerate(orders.items(), 1):
+                dt = datetime.fromtimestamp(ts)
+                print('\n%5d. Order placed on %s at %s'
+                      % (i, dt.strftime('%F'), dt.strftime('%T')))
+                show_dishes(dishes)
     input('\nPress <Enter> to return to main menu: ')
 
 
 def place_order():
-    pass
+    ts = int(time.time())   # NOTE: We ignore fractions of a second for now.
+    resp = call_api('add-order',
+                    params={'uid': userdata['uid'], 'timestamp': ts})
+    if resp.status_code == HTTP_OK:
+        oid = resp
+        for did, _, _, _, qty in cart:
+            call_api('add-order-dish',
+                     params={'oid': oid, 'did': did, 'quantity': qty})
+        print('Order placed successfully!')
+    else:
+        print('Failed to place order.')
+    input('Press <Enter> to return to main menu: ')
 
 
 # --- General support/utility functions. ---
@@ -152,15 +199,6 @@ def error_exit(msg):
 def check_tty():
     if not sys.stdin.isatty():
         error_exit('not running in a terminal; exiting')
-
-
-def read_response(prompt):
-    while True:
-        resp = input(prompt)
-        if not resp:
-            print('Sorry, that was not a valid response; try again.')
-        else:
-            return resp
 
 
 def ping_server():
@@ -180,16 +218,16 @@ def login():
         print('*** Error: Username cannot be blank/empty.')
     else:
         pword = getpass('password: ')
-        resp = call_api('login-user', params={'username': uname,
-                                              'password': pword})
-        if resp.status_code == 200:
+        resp = call_api('login-user',
+                        params={'username': uname, 'password': pword})
+        if resp.status_code == HTTP_OK:
             userdata['uid'] = resp
             data = get_user_data(userdata['uid'])
             userdata['uname'], userdata['fname'], userdata['phone'] = data
             print('Welcome, %s!' % userdata['fname'])
         else:
             print('Login failed.')
-    input('\nPress <Enter> to return to main menu: ')
+        input('\nPress <Enter> to return to main menu: ')
 
 
 def signup():
@@ -216,11 +254,11 @@ def print_header():
     print('\n>>> RestEasy | %s' % name)
 
 
-def read_choice(hi, prompt='Your choice: '):
+def read_choice(hi, prompt='Your choice: ', default=None):
     while True:
         i = input(prompt)
         if not i:
-            return None
+            return default
 
         try:
             i = int(i)
@@ -261,6 +299,7 @@ if __name__ == '__main__':
             choice = select(choices = [
                 ('List vendors by name.', list_vendors_by_name),
                 ('List dishes by name.', list_dishes_by_name),
-                ('View cart.', view_cart),
+                ('View cart.  (And optionally place the order.)', view_cart),
+                ('View orders placed by you.', view_orders),
                 ('Quit', quit),
             ])
