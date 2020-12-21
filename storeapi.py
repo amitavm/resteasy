@@ -130,3 +130,27 @@ def list_dishes_by_vendor():
 def list_dishes_by_name():
     name, = get_qparams_or_abort('name')
     return jsonify(store.list_dishes_by_name(name))
+
+
+# --- API around orders. ---
+@app.route('/add-order')
+def add_order():
+    uid, ts = get_qparams_or_abort('uid', 'timestamp')
+    return jsonify(store.add_order(uid, ts))
+
+
+@app.route('/add-order-dish')
+def add_order_dish():
+    oid, did, qty = get_qparams_or_abort('oid', 'did', 'quantity')
+    try:
+        store.add_order_dish(oid, did, qty)
+    except Exception:
+        abort(500, 'failed to order dish')
+    else:
+        return jsonify('OK')
+
+
+@app.route('/list-order-by-uid')
+def list_order_by_uid():
+    uid, = get_qparams_or_abort('uid')
+    return jsonify(store.list_order_by_uid(uid))
