@@ -164,8 +164,11 @@ def view_orders():
             print('\nOrders placed by you:')
             orders = defaultdict(list)
             # Segregate the orders by (order-id, timestamp) pairs.
-            for oid, ts, did, item, vendor, price, qty in ordlist:
-                orders[(oid, ts)].append((did, item, vendor, price, qty))
+            # NOTE: We include None's in the tuples below, as placeholders for
+            # dish-IDs, so that we can reuse show_dishes().
+            for oid, ts, item, vendor, price, qty in ordlist:
+                orders[(oid, ts)].append((None, item, vendor, price, qty))
+
             for i, ((oid, ts), dishes) in enumerate(orders.items(), 1):
                 dt = datetime.fromtimestamp(ts)
                 print('\n%5d. Order placed on %s at %s'
