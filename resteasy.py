@@ -85,8 +85,42 @@ def list_vendors_by_name():
         list_dishes_by_vendor(vendors[n-1])
 
 
-def list_dishes_by_name(name):
-    pass
+def list_dishes_by_name():
+    print_header()
+    print('\nEnter full/partial name of dishes.')
+    print('Or just press <Enter> to return to main menu.')
+    name = input('Dish name: ')
+    if not name:
+        return
+
+    resp = call_api('list-dishes-by-name', params={'name': name})
+    dishes = json.loads(resp.text)
+    if not dishes:
+        print('\nNo matching dishes found.')
+        input('Press <Enter> to return to main menu: ')
+        return
+    else:
+        print('\nMatching dishes:')
+        header = '%5s  %-25s%-20s%8s' % ('#', 'Item', 'Vendor', 'Price')
+        print('-' * len(header))
+        print(header)
+        print('-' * len(header))
+        for i, (_, item, vendor, price) in enumerate(dishes, 1):
+            print('%5d. %-25s%-20s%8.2f' % (i, item, vendor, price))
+        print('-' * len(header))
+
+    while True:
+        print('\nSelect a dish to add it to the cart.')
+        print('Or just press <Enter> to return to previous menu.')
+        n = read_choice(len(dishes), 'Dish to select: ')
+        if not n:
+            return
+
+        print('\nEnter the repeat-count (max %d) for "%s".'
+              % (max_qty, dishes[n-1][1]))
+        print('Or just press <Enter> to order one portion of it.')
+        qty = read_choice(max_qty, 'Number of portions to order: ', default=1)
+        cart.append(dishes[n-1] + [qty])
 
 
 def list_dishes_by_vendor(vendor_data):
