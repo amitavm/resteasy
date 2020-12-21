@@ -70,12 +70,13 @@ def list_vendors_by_name():
         return
     else:
         print('\nMatching vendors:\n')
-        print('-' * 57)
-        print('%5s  %-20s%-30s' % ('#', 'Name', 'Address'))
-        print('-' * 57)
+        header = '%5s  %-25s%-30s' % ('#', 'Name', 'Address')
+        print('-' * len(header))
+        print(header)
+        print('-' * len(header))
         for i, (_, name, addr) in enumerate(vendors, 1):
-            print('%5d. %-20s%-30s' % (i, name, addr))
-        print('-' * 57)
+            print('%5d. %-25s%-30s' % (i, name, addr))
+        print('-' * len(header))
 
     print('\nSelect a vendor to list its dishes.')
     print('Or just press <Enter> to return to previous menu.')
@@ -99,12 +100,13 @@ def list_dishes_by_vendor(vendor_data):
         return
     else:
         print('\nDishes offered by "%s":\n' % vname)
-        print('-' * 40)
-        print('%5s  %-25s%8s' % ('#', 'Item', 'Price'))
-        print('-' * 40)
+        header = '%5s  %-25s%8s' % ('#', 'Item', 'Price')
+        print('-' * len(header))
+        print(header)
+        print('-' * len(header))
         for i, (_, item, _, price) in enumerate(dishes, 1):
             print('%5d. %-25s%8.2f' % (i, item, price))
-        print('-' * 40)
+        print('-' * len(header))
 
     while True:
         print('\nSelect a dish to add it to the cart.')
@@ -121,19 +123,20 @@ def list_dishes_by_vendor(vendor_data):
 
 
 def show_dishes(dishes):
-    print('-' * 73)
-    print('%5s  %-25s%-20s%8s%5s%8s'
-          % ('#', 'Item', 'Vendor', 'Price', 'Qty', 'Totals'))
-    print('-' * 73)
+    header = '%5s  %-25s%-20s%8s%5s%8s' \
+             % ('#', 'Item', 'Vendor', 'Price', 'Qty', 'Totals')
+    print('-' * len(header))
+    print(header)
+    print('-' * len(header))
     total = 0
     for i, (_, item, vendor, price, qty) in enumerate(dishes, 1):
         item_price = price * qty
         print('%5d. %-25s%-20s%8.2f%5d%8.2f'
               % (i, item, vendor, price, qty, item_price))
         total += item_price
-    print('-' * 73)
+    print('-' * len(header))
     print('%65s%8.2f' % ('Net price: ', total))
-    print('-' * 73)
+    print('-' * len(header))
 
 
 def view_cart():
