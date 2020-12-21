@@ -1,4 +1,4 @@
-Adyar Anand Bhavan;B G Road, Bangalore;shanmugam;mysecret
+Adyar Anand Bhavan;B G Road, Bangalore;aab;pw
 idli;30.00
 rava idli;40.00
 dosa;60.00
