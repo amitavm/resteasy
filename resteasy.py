@@ -272,11 +272,54 @@ def login():
 
 def signup():
     '''Perform the signup process for a new user.'''
-    uname = input('Username: ')
-    if user_exists(uname):
-        print('Sorry, that username is already taken!')
+    print_header()
+    print('\nSign up for a new account.')
+
+    # Get the username.
+    while True:
+        print('\nEnter the username for your account.')
+        print('Or just press <Enter> to return to the main menu.')
+        uname = input('username: ')
+        if not uname:
+            return
+        if not user_exists(uname):
+            break
+        print('Sorry, that username is already taken.  Try again.')
+
+    # Get the password.
+    while True:
+        print('\nEnter the password.')
+        print('Or just press <Enter> to return to the main menu.')
+        pword = getpass('password: ')
+        if not pword:
+            return
+        pw2 = getpass('confirm password: ')
+        if pword == pw2:
+            break
+        print('Password do not match; please try again.')
+
+    # Get user's full name.
+    print('\nEnter your full name.')
+    print('Or just press <Enter> to return to the main menu.')
+    fname = input('fullname: ')
+    if not fname:
+        return
+
+    # Get user's phone number.
+    print('\nEnter your phone number.')
+    print('Or just press <Enter> to return to the main menu.')
+    phone = input('phone number: ')
+    if not phone:
+        return
+
+    # Perform the user sign-up on the server.
+    resp = call_api('add-user', params={'username': uname, 'password': pword,
+                                        'fullname': fname, 'phone': phone})
+    if resp.status_code == HTTP_OK:
+        print('Signup successful!')
     else:
-        print('OK, that username is available.  Congratulations!')
+        print('Signup failed.')
+    input('\nPress <Enter> to return to main menu: ')
 
 
 def quit():
