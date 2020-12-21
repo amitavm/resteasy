@@ -569,26 +569,28 @@ class _TableOrderDishes:
     def list_order_by_uid(self, uid):
         cursor = self.__conn.execute('''\
             SELECT
-                orders.timestamp, items.name, vendors.name,
-                dishes.price, orderdishes.quantity
+                orderdishes.oid, orders.timestamp, items.name,
+                vendors.name, dishes.price, orderdishes.quantity
             FROM orderdishes
             INNER JOIN dishes ON dishes.did = orderdishes.did
             INNER JOIN orders ON orders.oid = orderdishes.oid
             INNER JOIN items ON items.iid = dishes.iid
             INNER JOIN vendors ON vendors.vid = dishes.vid
-            WHERE orders.uid = ?;''', (uid,))
+            WHERE orders.uid = ?
+            ORDER BY orderdishes.oid ASC;''', (uid,))
         return [row for row in cursor]
 
 
     def list_order_by_vid(self, vid):
         cursor = self.__conn.execute('''\
             SELECT
-                orders.timestamp, users.username,
-                items.name, orderdishes.quantity
+                orderdishes.oid, orders.timestamp,
+                users.username, items.name, orderdishes.quantity
             FROM orderdishes
             INNER JOIN dishes ON dishes.did = orderdishes.did
             INNER JOIN orders ON orders.oid = orderdishes.oid
             INNER JOIN items ON items.iid = dishes.iid
             INNER JOIN users ON users.uid = orders.uid
-            WHERE dishes.vid = ?;''', (vid,))
+            WHERE dishes.vid = ?
+            ORDER BY orderdishes.oid ASC;''', (vid,))
         return [row for row in cursor]
