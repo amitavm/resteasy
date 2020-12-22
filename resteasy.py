@@ -49,10 +49,6 @@ def get_user_data(uid):
     return json.loads(resp.text)
 
 
-def list_vendors():
-    resp = call_api('list-vendors')
-    return json.loads(resp.text)
-
 
 def list_vendors_by_name():
     print_header()
