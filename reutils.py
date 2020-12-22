@@ -4,10 +4,17 @@ import os
 import requests
 import sys
 
+# --- Variables. ---
 
 # This is the URL where we will find the (web) API to use.
+# TODO: This should really be coming from a config file.
 apiurl = 'http://localhost:5000/'
 
+# Symbolic constant for HTTP OK status code.
+HTTP_OK = 200
+
+
+# --- Functions. ---
 
 def call_api(endpoint, params={}):
     '''Call the given API `endpoint' with query parameters `params'.'''
@@ -31,7 +38,7 @@ def ping_server():
         error_exit('cannot contact server; exiting')
 
 
-def quit():
+def quit_app():
     print('\nThanks for using RestEasy!  Have a great day!\n')
     sys.exit(0)
 

@@ -14,7 +14,16 @@ import sys
 import time
 
 # Project modules.
-import reutils
+from reutils import (
+    call_api,
+    check_tty,
+    clear_screen,
+    HTTP_OK,
+    ping_server,
+    quit_app,
+    read_choice,
+    select
+)
 
 
 # --- Global variables. ---
@@ -28,41 +37,38 @@ cart = []
 # Max quantities of a dish we allow to be ordered.
 max_qty = 9
 
-# Symbolic constant for HTTP OK status code.
-HTTP_OK = 200
-
 
 # --- Wrapper functions around API calls. ---
 
 def user_exists(uname):
     '''Return True if a user with username `uname' exists in our system;
     False otherwise.'''
-    resp = reutils.call_api('user-exists', params={'username': uname})
+    resp = call_api('user-exists', params={'username': uname})
     return json.loads(resp.text)
 
 
 def get_user_data(uid):
     '''Get data for a user with a given "uid".'''
-    resp = reutils.call_api('user-data', params={'uid': uid})
+    resp = call_api('user-data', params={'uid': uid})
     return json.loads(resp.text)
 
 
 def list_vendors_by_name(name):
     '''Return a list of vendors whose names have "name" in them.'''
-    resp = reutils.call_api('list-vendors-by-name', params={'name': name})
+    resp = call_api('list-vendors-by-name', params={'name': name})
     return json.loads(resp.text)
 
 
 def list_dishes_by_name(name):
     '''Return a list of dishes whose names have "name" in them.'''
-    resp = reutils.call_api('list-dishes-by-name', params={'name': name})
+    resp = call_api('list-dishes-by-name', params={'name': name})
     return json.loads(resp.text)
 
 
 # --- Our "business logic" functions. ---
 
 def print_header():
-    reutils.clear_screen()
+    clear_screen()
     name = userdata['fname'] or 'Guest'
     print('\n>>> RestEasy | %s' % name)
 
@@ -92,7 +98,7 @@ def search_vendors_by_name():
 
     print('\nSelect a vendor to list its dishes.')
     print('Or just press <Enter> to return to previous menu.')
-    n = reutils.read_choice(len(vendors), 'Vendor to list: ')
+    n = read_choice(len(vendors), 'Vendor to list: ')
     if n:
         list_dishes_by_vendor(vendors[n-1])
 
@@ -123,22 +129,21 @@ def search_dishes_by_name():
     while True:
         print('\nSelect a dish to add it to the cart.')
         print('Or just press <Enter> to return to previous menu.')
-        n = reutils.read_choice(len(dishes), 'Dish to select: ')
+        n = read_choice(len(dishes), 'Dish to select: ')
         if not n:
             return
 
         print('\nEnter the repeat-count (max %d) for "%s".'
               % (max_qty, dishes[n-1][1]))
         print('Or just press <Enter> to order one portion of it.')
-        qty = reutils.read_choice(max_qty, 'Number of portions to order: ',
-                                  default=1)
+        qty = read_choice(max_qty, 'Number of portions to order: ', default=1)
         cart.append(dishes[n-1] + [qty])
 
 
 def list_dishes_by_vendor(vendor_data):
     print_header()
     vid, vname, _ = vendor_data
-    resp = reutils.call_api('list-dishes-by-vendor', params={'vid': vid})
+    resp = call_api('list-dishes-by-vendor', params={'vid': vid})
     dishes = json.loads(resp.text)
     if not dishes:
         print('\nNo dishes found.')
@@ -157,15 +162,14 @@ def list_dishes_by_vendor(vendor_data):
     while True:
         print('\nSelect a dish to add it to the cart.')
         print('Or just press <Enter> to return to previous menu.')
-        n = reutils.read_choice(len(dishes), 'Dish to select: ')
+        n = read_choice(len(dishes), 'Dish to select: ')
         if not n:
             return
 
         print('\nEnter the repeat-count (max %d) for "%s".'
               % (max_qty, dishes[n-1][1]))
         print('Or just press <Enter> to order one portion of it.')
-        qty = reutils.read_choice(max_qty, 'Number of portions to order: ',
-                                  default=1)
+        qty = read_choice(max_qty, 'Number of portions to order: ', default=1)
         cart.append(dishes[n-1] + [qty])
 
 
@@ -203,8 +207,7 @@ def view_cart():
 
 def view_orders():
     print_header()
-    resp = reutils.call_api('list-order-by-uid',
-                            params={'uid': userdata['uid']})
+    resp = call_api('list-order-by-uid', params={'uid': userdata['uid']})
     if resp.status_code != HTTP_OK:
         print('\nFailed to fetch your orders.')
     else:
@@ -230,13 +233,13 @@ def view_orders():
 
 def place_order():
     ts = int(time.time())   # NOTE: We ignore fractions of a second for now.
-    resp = reutils.call_api('add-order',
-                            params={'uid': userdata['uid'], 'timestamp': ts})
+    resp = call_api('add-order',
+                    params={'uid': userdata['uid'], 'timestamp': ts})
     if resp.status_code == HTTP_OK:
         oid = resp
         for did, _, _, _, qty in cart:
-            reutils.call_api('add-order-dish',
-                             params={'oid': oid, 'did': did, 'quantity': qty})
+            call_api('add-order-dish',
+                     params={'oid': oid, 'did': did, 'quantity': qty})
         print('Order placed successfully!')
     else:
         print('Failed to place order.')
@@ -253,8 +256,8 @@ def login():
         print('*** Error: Username cannot be blank/empty.')
     else:
         pword = getpass('password: ')
-        resp = reutils.call_api('login-user',
-                                params={'username': uname, 'password': pword})
+        resp = call_api('login-user',
+                        params={'username': uname, 'password': pword})
         if resp.status_code == HTTP_OK:
             userdata['uid'] = resp
             data = get_user_data(userdata['uid'])
@@ -308,9 +311,8 @@ def signup():
         return
 
     # Perform the user sign-up on the server.
-    resp = reutils.call_api('add-user',
-                            params={'username': uname, 'password': pword,
-                                    'fullname': fname, 'phone': phone})
+    resp = call_api('add-user', params={'username': uname, 'password': pword,
+                                        'fullname': fname, 'phone': phone})
     if resp.status_code == HTTP_OK:
         print('Signup successful!')
     else:
@@ -319,23 +321,23 @@ def signup():
 
 
 if __name__ == '__main__':
-    reutils.check_tty()         # Make sure we are running in a terminal.
-    reutils.ping_server()       # Make sure the server is reachable.
+    check_tty()         # Make sure we are running in a terminal.
+    ping_server()       # Make sure the server is reachable.
 
     # This is the top-level loop.
     while True:
         print_header()
         if userdata['uid'] is None:
-            choice = reutils.select(choices = [
+            choice = select(choices = [
                 ('Signup [If you do not have login credentials.]', signup),
                 ('Login  [If you already signed up.]', login),
-                ('Quit', reutils.quit),
+                ('Quit', quit_app),
             ])
         else:
-            choice = reutils.select(choices = [
+            choice = select(choices = [
                 ('Search vendors by name.', search_vendors_by_name),
                 ('Search dishes by name.', search_dishes_by_name),
                 ('View cart.  (And optionally place the order.)', view_cart),
                 ('View orders placed by you.', view_orders),
-                ('Quit', reutils.quit),
+                ('Quit', quit_app),
             ])
