@@ -11,3 +11,18 @@
 ** TODO Support sorting of dish/vendor listing.
 
 ** TODO Make users' carts persist across (login) sessions.
+
+** TODO Have a separate API function to "commit" the changes.
+
+   At present, we are do commit's for every update/change we perform on the DB.
+   That's not the right approach always.  For example, when placing orders, we
+   first create an entry in the `orders` table, then create one or more entries
+   in the `orderdishes` table.  Currently a commit is done (automatically) for
+   each of those actions.  Instead, it would be better to start creating all
+   those entries, and finally, at the end, do a commit.  That would be more in
+   line with the concept of transactions: either the entire set of changes is
+   made, or none of them are.
+
+** TODO Read config data for client-side apps from config (.ini) files.
+
+   We currently use global variables in the source files as a workaround.
