@@ -1,16 +1,13 @@
 * Backlog for the RestEasy project.
 
-** Overall
+** TODO Add the client-side app for admins.
 
-*** TODO Add the client-side app for admins.
+** TODO Add unit tests.
 
-*** TODO Add unit tests.
+** TODO Make it possible for users to edit the cart.
 
+** TODO Allow users to search for vendors by address/area.
 
-** The user-facing client `resteasy.py`.
+** TODO Support sorting of dish/vendor listing.
 
-*** TODO Make it possible for users to edit the cart.
-
-*** TODO Allow users to search for vendors by address/area.
-
-*** TODO Support sorting of dish/vendor listing.
+** TODO Make users' carts persist across (login) sessions.
