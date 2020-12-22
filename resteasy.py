@@ -66,6 +66,9 @@ def print_header():
 
 
 def read_choice(hi, prompt='Your choice: ', default=None):
+    '''Read (and return) an integer from the user in the range [1,hi].
+    Prompt the user with `prompt'.  If the user enters no input,
+    return `default'.'''
     while True:
         i = input(prompt)
         if not i:
@@ -96,10 +99,13 @@ def select(choices):
 # --- Wrapper functions around API calls. ---
 
 def call_api(endpoint, params={}):
+    '''Call the given API `endpoint' with query parameters `params'.'''
     return requests.get(apiurl + endpoint, params)
 
 
 def user_exists(uname):
+    '''Return True if a user with username `uname' exists in our system;
+    False otherwise.'''
     resp = call_api('user-exists', params={'username': uname})
     return json.loads(resp.text)
 
