@@ -31,8 +31,69 @@ max_qty = 9
 HTTP_OK = 200
 
 
-# --- Wrapper functions around API calls. ---
+# --- General support/utility functions. ---
 
+def error_exit(msg):
+    sys.stderr.write('%s: error: %s\n' % (sys.argv[0], msg))
+    sys.exit(1)
+
+
+def check_tty():
+    if not sys.stdin.isatty():
+        error_exit('not running in a terminal; exiting')
+
+
+def ping_server():
+    try:
+        resp = requests.get(apiurl + 'ping')
+    except Exception:
+        error_exit('cannot contact server; exiting')
+
+
+def quit():
+    print('\nThanks for using RestEasy!  Have a great day!\n')
+    sys.exit(0)
+
+
+def clear_screen():
+    os.system('clear')
+
+
+def print_header():
+    clear_screen()
+    name = userdata['fname'] or 'Guest'
+    print('\n>>> RestEasy | %s' % name)
+
+
+def read_choice(hi, prompt='Your choice: ', default=None):
+    while True:
+        i = input(prompt)
+        if not i:
+            return default
+
+        try:
+            i = int(i)
+            if 1 <= i <= hi:
+                return i
+            else:
+                print('Please enter a choice between 1 and %d.' % hi)
+        except Exception:
+            print('Sorry, that is not an integer; try again.')
+
+
+def select(choices):
+    '''Ask the user to make a choice from "choices".
+    Invoke the corresponding action/function.'''
+    print('\nSelect an option by entering its number on the left.')
+    print('Or just press <Enter> to return to previous menu.')
+    for i, c in enumerate(choices, 1):
+        print('   %2d. %s' % (i, c[0]))
+    n = read_choice(len(choices))
+    if n:
+        choices[n-1][1]()
+
+
+# --- Wrapper functions around API calls. ---
 
 def call_api(endpoint, params={}):
     return requests.get(apiurl + endpoint, params)
@@ -49,8 +110,21 @@ def get_user_data(uid):
     return json.loads(resp.text)
 
 
+def list_vendors_by_name(name):
+    '''Return a list of vendors whose names have "name" in them.'''
+    resp = call_api('list-vendors-by-name', params={'name': name})
+    return json.loads(resp.text)
 
-def list_vendors_by_name():
+
+def list_dishes_by_name(name):
+    '''Return a list of dishes whose names have "name" in them.'''
+    resp = call_api('list-dishes-by-name', params={'name': name})
+    return json.loads(resp.text)
+
+
+# --- Our "business logic" functions. ---
+
+def search_vendors_by_name():
     print_header()
     print('\nEnter full/partial name of vendor(s).')
     print('Or just press <Enter> to return to main menu.')
@@ -58,8 +132,7 @@ def list_vendors_by_name():
     if not name:
         return
 
-    resp = call_api('list-vendors-by-name', params={'name': name})
-    vendors = json.loads(resp.text)
+    vendors = list_vendors_by_name(name)
     if not vendors:
         print('\nNo matching vendors found.')
         input('Press <Enter> to return to main menu: ')
@@ -81,7 +154,7 @@ def list_vendors_by_name():
         list_dishes_by_vendor(vendors[n-1])
 
 
-def list_dishes_by_name():
+def search_dishes_by_name():
     print_header()
     print('\nEnter full/partial name of dishes.')
     print('Or just press <Enter> to return to main menu.')
@@ -89,8 +162,7 @@ def list_dishes_by_name():
     if not name:
         return
 
-    resp = call_api('list-dishes-by-name', params={'name': name})
-    dishes = json.loads(resp.text)
+    dishes = list_dishes_by_name(name)
     if not dishes:
         print('\nNo matching dishes found.')
         input('Press <Enter> to return to main menu: ')
@@ -152,7 +224,7 @@ def list_dishes_by_vendor(vendor_data):
         cart.append(dishes[n-1] + [qty])
 
 
-def show_dishes(dishes):
+def list_dishes(dishes):
     header = '%5s  %-25s%-20s%8s%5s%8s' \
              % ('#', 'Item', 'Vendor', 'Price', 'Qty', 'Totals')
     print('-' * len(header))
@@ -176,7 +248,7 @@ def view_cart():
         input('Press <Enter> to return to main menu: ')
     else:
         print('\nCart entries:')
-        show_dishes(cart)
+        list_dishes(cart)
         print('\nEnter "y|yes" to place the order.')
         print('Or just press <Enter> to return to main menu.')
         resp = input('Place order?  Enter "y|yes" to confirm: ')
@@ -198,7 +270,7 @@ def view_orders():
             orders = defaultdict(list)
             # Segregate the orders by (order-id, timestamp) pairs.
             # NOTE: We include None's in the tuples below, as placeholders for
-            # dish-IDs, so that we can reuse show_dishes().
+            # dish-IDs, so that we can reuse list_dishes().
             for oid, ts, item, vendor, price, qty in ordlist:
                 orders[(oid, ts)].append((None, item, vendor, price, qty))
 
@@ -206,7 +278,7 @@ def view_orders():
                 dt = datetime.fromtimestamp(ts)
                 print('\n%5d. Order placed on %s at %s'
                       % (i, dt.strftime('%F'), dt.strftime('%T')))
-                show_dishes(dishes)
+                list_dishes(dishes)
     input('\nPress <Enter> to return to main menu: ')
 
 
@@ -223,25 +295,6 @@ def place_order():
     else:
         print('Failed to place order.')
     input('Press <Enter> to return to main menu: ')
-
-
-# --- General support/utility functions. ---
-
-def error_exit(msg):
-    sys.stderr.write('%s: error: %s\n' % (sys.argv[0], msg))
-    sys.exit(1)
-
-
-def check_tty():
-    if not sys.stdin.isatty():
-        error_exit('not running in a terminal; exiting')
-
-
-def ping_server():
-    try:
-        resp = requests.get(apiurl + 'ping')
-    except Exception:
-        error_exit('cannot contact server; exiting')
 
 
 def login():
@@ -318,49 +371,6 @@ def signup():
     input('\nPress <Enter> to return to main menu: ')
 
 
-def quit():
-    print('\nThanks for using RestEasy!  Have a great day!\n')
-    sys.exit(0)
-
-
-def clear_screen():
-    os.system('clear')
-
-
-def print_header():
-    clear_screen()
-    name = userdata['fname'] or 'Guest'
-    print('\n>>> RestEasy | %s' % name)
-
-
-def read_choice(hi, prompt='Your choice: ', default=None):
-    while True:
-        i = input(prompt)
-        if not i:
-            return default
-
-        try:
-            i = int(i)
-            if 1 <= i <= hi:
-                return i
-            else:
-                print('Please enter a choice between 1 and %d.' % hi)
-        except Exception:
-            print('Sorry, that is not an integer; try again.')
-
-
-def select(choices):
-    '''Ask the user to make a choice from "choices".
-    Invoke the corresponding action/function.'''
-    print('\nSelect an option by entering its number on the left.')
-    print('Or just press <Enter> to return to previous menu.')
-    for i, c in enumerate(choices, 1):
-        print('   %2d. %s' % (i, c[0]))
-    n = read_choice(len(choices))
-    if n:
-        choices[n-1][1]()
-
-
 if __name__ == '__main__':
     check_tty()     # Make sure we are running in a terminal.
     ping_server()   # Make sure the server is reachable.
@@ -376,8 +386,8 @@ if __name__ == '__main__':
             ])
         else:
             choice = select(choices = [
-                ('List vendors by name.', list_vendors_by_name),
-                ('List dishes by name.', list_dishes_by_name),
+                ('Search vendors by name.', search_vendors_by_name),
+                ('Search dishes by name.', search_dishes_by_name),
                 ('View cart.  (And optionally place the order.)', view_cart),
                 ('View orders placed by you.', view_orders),
                 ('Quit', quit),
