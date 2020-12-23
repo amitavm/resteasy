@@ -12,9 +12,9 @@
 
 ** TODO Make users' carts persist across (login) sessions.
 
-** TODO Have a separate API function to "commit" the changes.
+** TODO Have a separate API function to explicitly commit the changes.
 
-   At present, we are do commit's for every update/change we perform on the DB.
+   At present, we do a commit for every update/change we perform on the DB.
    That's not the right approach always.  For example, when placing orders, we
    first create an entry in the `orders` table, then create one or more entries
    in the `orderdishes` table.  Currently a commit is done (automatically) for
