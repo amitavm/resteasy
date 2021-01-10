@@ -315,10 +315,10 @@ class _TableAdmins:
 
     def check_credentials(self, uname, pword):
         cursor = self.__conn.execute(
-            'SELECT aid FROM admins WHERE username = ? AND password = ?;',
+            'SELECT aid, vid FROM admins WHERE username = ? AND password = ?;',
             (uname, pword))
         row = cursor.fetchone()
-        return row[0] if row else None
+        return row if row else None
 
 
 class _TableVendors:
