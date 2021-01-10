@@ -1,6 +1,10 @@
 # Ignore Vim swap files.
 .*.sw?
 
+# Ignore tags files.
+tags
+TAGS
+
 # Ignore (SQLite) database files on disk.
 # They are not required to have this extension, of course, but we use ".db".
 *.db
