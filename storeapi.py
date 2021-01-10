@@ -154,3 +154,9 @@ def add_order_dish():
 def list_order_by_uid():
     uid, = get_qparams_or_abort('uid')
     return jsonify(store.list_order_by_uid(uid))
+
+
+@app.route('/list-order-by-vid')
+def list_order_by_vid():
+    vid, = get_qparams_or_abort('vid')
+    return jsonify(store.list_order_by_vid(vid))
