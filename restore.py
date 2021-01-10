@@ -585,7 +585,7 @@ class _TableOrderDishes:
         cursor = self.__conn.execute('''\
             SELECT
                 orderdishes.oid, orders.timestamp,
-                users.username, items.name, orderdishes.quantity
+                users.fullname, items.name, orderdishes.quantity
             FROM orderdishes
             INNER JOIN dishes ON dishes.did = orderdishes.did
             INNER JOIN orders ON orders.oid = orderdishes.oid
