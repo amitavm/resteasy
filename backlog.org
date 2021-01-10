@@ -26,3 +26,16 @@
 ** TODO Read config data for client-side apps from config (.ini) files.
 
    We currently use global variables in the source files as a workaround.
+
+** TODO Do better error-checking for api calls.
+
+   In the user-facing app resteasy.py, we have several wrapper functions around
+   API calls that deserialize and return the JSON data returned by the APIs.
+   We should check for possible errors in that flow, in case an API call fails.
+
+** TODO Reduce boilerplate in the API wrapper functions.
+
+   The wrapper functions around the API calls (as mentioned in the previous
+   TODO) are basically doing the same thing: call the API, and return the
+   deserialized data.  We should be able to reduce all of them to a single
+   wrapper function.
